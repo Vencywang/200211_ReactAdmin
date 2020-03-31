@@ -6,11 +6,11 @@ import {
     Cascader,
     Upload,
     Button,
-    Icon
-
+    Icon,
+    message
 } from 'antd'
 import LinkButton from '../../components/link-button'
-import {reqCategorys, reqCategory} from '../../api/index'
+import {reqCategorys, reqAddOrUpdateProduct} from '../../api/index'
 import PicturesWall from './pictures-wall'
 import RichTextEditor from './rich-text-editor'
 
@@ -72,15 +72,39 @@ const {TextArea} = Input
         
         
     }
-     submit=()=>{
+     submit = ()=>{
          //进行表单验证 如果通过才发送请求
-         this.props.form.validateFields((error,values)=>{
+         this.props.form.validateFields( async (error,values)=>{
             if(!error){
                 console.log(values)
+                //1、收集数据 并封装成product对象
+                const {name, desc,price,categoryIds} = values
+                let pCategoryId,categoryId
+                if(categoryIds.length===1){
+                    pCategoryId= '0'
+                    categoryId=categoryIds[0]
+                }else{
+                    pCategoryId = categoryIds[0]
+                    categoryId=categoryIds[1]
+                }
                 const imgs= this.pw.current.getImgs()
                 const detail = this.editor.current.getDetail()
-                console.log('imgs',imgs,detail)
-                alert('发送ajax请求')
+                const product ={name,desc,price,imgs,detail,pCategoryId,categoryId}
+                //如果是更新 需要添加_id
+                if(this.isUpdate){
+                    product._id = this.product._id
+                }
+
+                //2.调用接口请求函数 去添加或者更新
+                const result = await reqAddOrUpdateProduct(product)
+
+                //3.根据结果提示
+                if(result.status===0){
+                    message.success(`${this.isUpdate?'更新':'添加'}商品成功！`)
+                    this.props.history.goBack()
+                }else{
+                    message.error(`${this.isUpdate?'更新':'添加'}商品失败！`)
+                }
             }
          })
      }

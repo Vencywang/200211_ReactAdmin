@@ -6,6 +6,7 @@ import {
  } from 'antd'
 import LinkButton from '../../components/link-button'
 import {reqCategory} from '../../api/index' 
+import {BASE_IMG_URL} from '../../utils/constants'
 
  const Item = List.Item
 
@@ -80,7 +81,7 @@ export default class ProductDetail extends Component{
                                     <img
                                             key={img}
                                             className="product-img"
-                                            src={img}
+                                            src={BASE_IMG_URL+img}
                                             alt="img"/>
                                 ))
                             }                            

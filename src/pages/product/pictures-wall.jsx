@@ -51,9 +51,7 @@ export default class PicturesWall extends React.Component {
       this.state={
         previewVisible: false, //表示是否显示大图预览界面Modal
         previewImage: '', //大图的url
-        fileList: [
-
-        ]//所有已经上传图片的数组
+        fileList//所有已经上传图片的数组
       }
   }
 

@@ -2,7 +2,8 @@ import React, {Component} from 'react'
 import logo from '../../assets/images/logo.png'
 import {Link,withRouter} from 'react-router-dom'
 import menuList from '../../config/menuConfig'
-import { Menu, Icon } from 'antd';
+import { Menu, Icon } from 'antd'
+import memoryUtils from '../../utils/memoryUtils' 
 // import {
 //     MailOutlined,
 //   AppstoreOutlined,
@@ -17,6 +18,22 @@ import './index.less'
 const { SubMenu } = Menu;
 //左侧导航组件
  class LeftNav extends Component{
+    //判断当前登录用户对item是否有权限
+    hasAuth = (item)=>{
+        const {isPublic,key} = item
+        const menus = memoryUtils.user.role.menus
+
+        //如果当前用户是admin
+        const  username = memoryUtils.user.username
+        //如果当前item是公开的
+        //当前用户有此item的权限 看key有没有在menus中
+        if(username === 'admin' || isPublic || menus.indexOf(key)!==-1){
+            return true
+        }else if(item.children){ //当前用户有子item的权限
+            return !!item.children.find(child=>menus.indexOf(child.key)!==-1)
+        }
+    }
+
     //根据menu的数据数组生成对应的标签数组
     //使用map加递归调用
     //使用reduce加递归调用
@@ -60,44 +77,49 @@ const { SubMenu } = Menu;
     getMenuNodes= (menuList) =>{
         const path= this.props.location.pathname
         return menuList.reduce((pre,item)=>{
-            //向pre中添加<Menu.item/>
-            //向pre中添加<SubMenu>
-            if(!item.children){
-                pre.push((
-                    <Menu.Item key= {item.key}>
-                    <Link to= {item.key} >
-                    <Icon type = {item.icon}  />
-                    <span>{item.title}</span>
-                    </Link>
-                </Menu.Item>
-                ))
-            }else{
-                //查找一个与当前请求路径匹配的子Item
-                const cItem= item.children.find(cItem=>path.indexOf(cItem.key)===0)
-
-                if (cItem){
-                    this.openKey = item.key
-                } 
-                
-                pre.push(
-                    (
-                        <SubMenu
-                        key={item.key}
-                        title={
-                        <span>
-                            <Icon type = {item.icon}  />
+            //如果当前用户有item对应的权限才需要显示对应的菜单项
+            if(this.hasAuth(item)){
+                    //向pre中添加<Menu.item/>
+                //向pre中添加<SubMenu>
+                if(!item.children){
+                    pre.push((
+                        <Menu.Item key= {item.key}>
+                        <Link to= {item.key} >
+                        <Icon type = {item.icon}  />
                         <span>{item.title}</span>
-                        </span>
-                        }
-                    >
-                        {
-                            this.getMenuNodes(item.children)
-                        }
+                        </Link>
+                    </Menu.Item>
+                    ))
+                }else{
+                    //查找一个与当前请求路径匹配的子Item
+                    const cItem= item.children.find(cItem=>path.indexOf(cItem.key)===0)
 
-                    </SubMenu> 
+                    if (cItem){
+                        this.openKey = item.key
+                    } 
+                    
+                    pre.push(
+                        (
+                            <SubMenu
+                            key={item.key}
+                            title={
+                            <span>
+                                <Icon type = {item.icon}  />
+                            <span>{item.title}</span>
+                            </span>
+                            }
+                        >
+                            {
+                                this.getMenuNodes(item.children)
+                            }
+
+                        </SubMenu> 
+                        )
                     )
-                )
+                }
             }
+            
+
             return pre
         },[])
     }
