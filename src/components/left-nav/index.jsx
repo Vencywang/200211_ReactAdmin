@@ -4,6 +4,8 @@ import {Link,withRouter} from 'react-router-dom'
 import menuList from '../../config/menuConfig'
 import { Menu, Icon } from 'antd'
 import memoryUtils from '../../utils/memoryUtils' 
+import {connect} from 'react-redux'
+import {setHeadTitle} from '../../redux/actions'
 // import {
 //     MailOutlined,
 //   AppstoreOutlined,
@@ -21,10 +23,10 @@ const { SubMenu } = Menu;
     //判断当前登录用户对item是否有权限
     hasAuth = (item)=>{
         const {isPublic,key} = item
-        const menus = memoryUtils.user.role.menus
+        const menus = this.props.user.role.menus
 
         //如果当前用户是admin
-        const  username = memoryUtils.user.username
+        const  username = this.props.user.username
         //如果当前item是公开的
         //当前用户有此item的权限 看key有没有在menus中
         if(username === 'admin' || isPublic || menus.indexOf(key)!==-1){
@@ -79,12 +81,17 @@ const { SubMenu } = Menu;
         return menuList.reduce((pre,item)=>{
             //如果当前用户有item对应的权限才需要显示对应的菜单项
             if(this.hasAuth(item)){
-                    //向pre中添加<Menu.item/>
+                //向pre中添加<Menu.item/>
                 //向pre中添加<SubMenu>
                 if(!item.children){
+                    //判断item是否是当前item
+                    if (item.key===path||path.indexOf(item.key)===0){
+                        //更新redux中headerTitle状态
+                        this.props.setHeadTitle(item.title)
+                    }
                     pre.push((
                         <Menu.Item key= {item.key}>
-                        <Link to= {item.key} >
+                        <Link to= {item.key} onClick={()=>this.props.setHeadTitle(item.title)}>
                         <Icon type = {item.icon}  />
                         <span>{item.title}</span>
                         </Link>
@@ -238,4 +245,7 @@ const { SubMenu } = Menu;
 //withRouter高阶组件：
 //包装非路由组件 返回一个新的组件
 //新的组件向非路由组件传递3个属性： history/location/match
-export default withRouter(LeftNav)
+export default connect(
+    state => ({user:state.user}),
+    {setHeadTitle}
+)(withRouter(LeftNav))
